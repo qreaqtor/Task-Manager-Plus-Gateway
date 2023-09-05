@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func JwtAuthMiddleware() gin.HandlerFunc {
@@ -51,7 +50,7 @@ func tokenValid(token string) error {
 	return nil
 }
 
-func extractTokenID(tokenString string) (primitive.ObjectID, error) {
+func extractTokenID(tokenString string) (string, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -59,19 +58,15 @@ func extractTokenID(tokenString string) (primitive.ObjectID, error) {
 		return []byte(API_SECRET), nil
 	})
 	if err != nil {
-		return primitive.NilObjectID, err
+		return "", err
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
 		userIdStr, ok := claims["user_id"].(string)
 		if !ok {
-			return primitive.NilObjectID, fmt.Errorf("user id claim is not a string")
+			return "", fmt.Errorf("user id claim is not a string")
 		}
-		userId, err := primitive.ObjectIDFromHex(userIdStr)
-		if err != nil {
-			return primitive.NilObjectID, err
-		}
-		return userId, nil
+		return userIdStr, nil
 	}
-	return primitive.NilObjectID, nil
+	return "", nil
 }
