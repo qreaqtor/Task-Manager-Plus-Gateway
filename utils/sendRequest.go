@@ -7,8 +7,8 @@ import (
 	"net/http"
 )
 
-func SendRequest(method, backend, endpoint, userId string, jsonData []byte) (map[string]string, int) {
-	req, err := http.NewRequest(method, backend+endpoint+userId, bytes.NewBuffer(jsonData))
+func SendRequest(method, endpoint string, jsonData []byte) (map[string]string, int) {
+	req, err := http.NewRequest(method, endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return map[string]string{"message": "invalid request"}, http.StatusBadRequest
 	}

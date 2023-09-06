@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"task-manager-plus-gateway/utils"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,8 +21,22 @@ func getUser(ctx *gin.Context) {
 		return
 	}
 
-	outputData, statusCode := utils.SendRequest(utils.Get, utils.USERS_BACKEND, "/users/get/", userId, jsonData)
-	ctx.JSON(statusCode, outputData)
+	outputDataChan := make(chan map[string]string)
+	statusCodeChan := make(chan int)
+
+	go func() {
+		outputData, statusCode := utils.SendRequest(utils.Get, utils.USERS_BACKEND+"/users/get/"+userId, jsonData)
+		outputDataChan <- outputData
+		statusCodeChan <- statusCode
+	}()
+
+	select {
+	case outputData := <-outputDataChan:
+		statusCode := <-statusCodeChan
+		ctx.JSON(statusCode, outputData)
+	case <-time.After(5 * time.Second):
+		ctx.JSON(http.StatusGatewayTimeout, gin.H{"message": "request timeout"})
+	}
 }
 
 func updateUser(ctx *gin.Context) {
@@ -33,8 +48,22 @@ func updateUser(ctx *gin.Context) {
 		return
 	}
 
-	outputData, statusCode := utils.SendRequest(utils.Patch, utils.USERS_BACKEND, "/users/update/", userId, jsonData)
-	ctx.JSON(statusCode, outputData)
+	outputDataChan := make(chan map[string]string)
+	statusCodeChan := make(chan int)
+
+	go func() {
+		outputData, statusCode := utils.SendRequest(utils.Patch, utils.USERS_BACKEND+"/users/update/"+userId, jsonData)
+		outputDataChan <- outputData
+		statusCodeChan <- statusCode
+	}()
+
+	select {
+	case outputData := <-outputDataChan:
+		statusCode := <-statusCodeChan
+		ctx.JSON(statusCode, outputData)
+	case <-time.After(5 * time.Second):
+		ctx.JSON(http.StatusGatewayTimeout, gin.H{"message": "request timeout"})
+	}
 }
 
 func deleteUser(ctx *gin.Context) {
@@ -46,8 +75,22 @@ func deleteUser(ctx *gin.Context) {
 		return
 	}
 
-	outputData, statusCode := utils.SendRequest(utils.Delete, utils.USERS_BACKEND, "/users/delete/", userId, jsonData)
-	ctx.JSON(statusCode, outputData)
+	outputDataChan := make(chan map[string]string)
+	statusCodeChan := make(chan int)
+
+	go func() {
+		outputData, statusCode := utils.SendRequest(utils.Delete, utils.USERS_BACKEND+"/users/delete/"+userId, jsonData)
+		outputDataChan <- outputData
+		statusCodeChan <- statusCode
+	}()
+
+	select {
+	case outputData := <-outputDataChan:
+		statusCode := <-statusCodeChan
+		ctx.JSON(statusCode, outputData)
+	case <-time.After(5 * time.Second):
+		ctx.JSON(http.StatusGatewayTimeout, gin.H{"message": "request timeout"})
+	}
 }
 
 func RegisterUsersRoutes(rg *gin.RouterGroup) {

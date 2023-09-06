@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"task-manager-plus-gateway/utils"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,8 +16,22 @@ func registerUser(ctx *gin.Context) {
 		return
 	}
 
-	outputData, statusCode := utils.SendRequest(utils.Post, utils.USERS_BACKEND, "/auth/register", "", jsonData)
-	ctx.JSON(statusCode, outputData)
+	outputDataChan := make(chan map[string]string)
+	statusCodeChan := make(chan int)
+
+	go func() {
+		outputData, statusCode := utils.SendRequest(utils.Post, utils.USERS_BACKEND+"/auth/register", jsonData)
+		outputDataChan <- outputData
+		statusCodeChan <- statusCode
+	}()
+
+	select {
+	case outputData := <-outputDataChan:
+		statusCode := <-statusCodeChan
+		ctx.JSON(statusCode, outputData)
+	case <-time.After(5 * time.Second):
+		ctx.JSON(http.StatusGatewayTimeout, gin.H{"message": "request timeout"})
+	}
 }
 
 func login(ctx *gin.Context) {
@@ -26,8 +41,22 @@ func login(ctx *gin.Context) {
 		return
 	}
 
-	outputData, statusCode := utils.SendRequest(utils.Post, utils.USERS_BACKEND, "/auth/login", "", jsonData)
-	ctx.JSON(statusCode, outputData)
+	outputDataChan := make(chan map[string]string)
+	statusCodeChan := make(chan int)
+
+	go func() {
+		outputData, statusCode := utils.SendRequest(utils.Post, utils.USERS_BACKEND+"/auth/login", jsonData)
+		outputDataChan <- outputData
+		statusCodeChan <- statusCode
+	}()
+
+	select {
+	case outputData := <-outputDataChan:
+		statusCode := <-statusCodeChan
+		ctx.JSON(statusCode, outputData)
+	case <-time.After(5 * time.Second):
+		ctx.JSON(http.StatusGatewayTimeout, gin.H{"message": "request timeout"})
+	}
 }
 
 func RegisterAuthRoutes(rg *gin.RouterGroup) {
