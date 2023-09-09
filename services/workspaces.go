@@ -10,8 +10,6 @@ import (
 )
 
 func createWorkspace(ctx *gin.Context) {
-	username := ctx.MustGet("username").(string)
-
 	jsonData, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -22,7 +20,7 @@ func createWorkspace(ctx *gin.Context) {
 	statusCodeChan := make(chan int)
 
 	go func() {
-		outputData, statusCode := utils.SendRequest(utils.Post, utils.TASKS_BACKEND+"/users/"+username+"/workspaces/create", jsonData)
+		outputData, statusCode := utils.SendRequest(utils.Post, utils.TASKS_BACKEND+"/users/workspaces/create", jsonData)
 		outputDataChan <- outputData
 		statusCodeChan <- statusCode
 	}()
@@ -49,7 +47,7 @@ func getUserWorkspaces(ctx *gin.Context) {
 	statusCodeChan := make(chan int)
 
 	go func() {
-		outputData, statusCode := utils.SendRequest(utils.Get, utils.TASKS_BACKEND+"/users/"+username+"/workspaces/get/all", jsonData)
+		outputData, statusCode := utils.SendRequest(utils.Get, utils.TASKS_BACKEND+"/users/workspaces/get/all/"+username, jsonData)
 		outputDataChan <- outputData
 		statusCodeChan <- statusCode
 	}()
@@ -64,7 +62,6 @@ func getUserWorkspaces(ctx *gin.Context) {
 }
 
 func deleteWorkspace(ctx *gin.Context) {
-	username := ctx.MustGet("username").(string)
 	workspaceId := ctx.Param("workspaceId")
 
 	jsonData, err := io.ReadAll(ctx.Request.Body)
@@ -77,7 +74,7 @@ func deleteWorkspace(ctx *gin.Context) {
 	statusCodeChan := make(chan int)
 
 	go func() {
-		outputData, statusCode := utils.SendRequest(utils.Delete, utils.TASKS_BACKEND+"/users/"+username+"/workspaces/delete/"+workspaceId, jsonData)
+		outputData, statusCode := utils.SendRequest(utils.Delete, utils.TASKS_BACKEND+"/users/workspaces/delete/"+workspaceId, jsonData)
 		outputDataChan <- outputData
 		statusCodeChan <- statusCode
 	}()

@@ -10,8 +10,6 @@ import (
 )
 
 func createTask(ctx *gin.Context) {
-	username := ctx.MustGet("username").(string)
-
 	jsonData, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -22,7 +20,7 @@ func createTask(ctx *gin.Context) {
 	statusCodeChan := make(chan int)
 
 	go func() {
-		outputData, statusCode := utils.SendRequest(utils.Post, utils.TASKS_BACKEND+"/users/"+username+"/tasks/create", jsonData)
+		outputData, statusCode := utils.SendRequest(utils.Post, utils.TASKS_BACKEND+"/users/tasks/create", jsonData)
 		outputDataChan <- outputData
 		statusCodeChan <- statusCode
 	}()
@@ -37,8 +35,7 @@ func createTask(ctx *gin.Context) {
 }
 
 func getWorkspaceTasks(ctx *gin.Context) {
-	username := ctx.MustGet("username").(string)
-	workspaceId := ctx.Param("workspaceId")
+	taskId := ctx.Param("taskId")
 
 	jsonData, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
@@ -50,7 +47,7 @@ func getWorkspaceTasks(ctx *gin.Context) {
 	statusCodeChan := make(chan int)
 
 	go func() {
-		outputData, statusCode := utils.SendRequest(utils.Get, utils.TASKS_BACKEND+"/users/"+username+"/tasks/get/"+workspaceId, jsonData)
+		outputData, statusCode := utils.SendRequest(utils.Get, utils.TASKS_BACKEND+"/users/tasks/get/"+taskId, jsonData)
 		outputDataChan <- outputData
 		statusCodeChan <- statusCode
 	}()
@@ -65,8 +62,7 @@ func getWorkspaceTasks(ctx *gin.Context) {
 }
 
 func deleteTask(ctx *gin.Context) {
-	username := ctx.MustGet("username").(string)
-	workspaceId := ctx.Param("workspaceId")
+	taskId := ctx.Param("taskId")
 
 	jsonData, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
@@ -78,7 +74,7 @@ func deleteTask(ctx *gin.Context) {
 	statusCodeChan := make(chan int)
 
 	go func() {
-		outputData, statusCode := utils.SendRequest(utils.Delete, utils.TASKS_BACKEND+"/users/"+username+"/tasks/delete/"+workspaceId, jsonData)
+		outputData, statusCode := utils.SendRequest(utils.Delete, utils.TASKS_BACKEND+"/users/tasks/delete/"+taskId, jsonData)
 		outputDataChan <- outputData
 		statusCodeChan <- statusCode
 	}()
@@ -94,6 +90,6 @@ func deleteTask(ctx *gin.Context) {
 
 func RegisterTasksRoutes(rg *gin.RouterGroup) {
 	rg.POST("/create", createTask)
-	rg.GET("/get/:workspaceId", getWorkspaceTasks)
-	rg.DELETE("/delete/:workspaceId", deleteTask)
+	rg.GET("/get/:taskId", getWorkspaceTasks)
+	rg.DELETE("/delete/:taskId", deleteTask)
 }
