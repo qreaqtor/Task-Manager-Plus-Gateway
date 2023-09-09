@@ -18,13 +18,13 @@ func JwtAuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		userId, err := extractTokenID(token)
+		username, err := extractTokenUsername(token)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("can't extract token: %s", err.Error())})
 			c.Abort()
 			return
 		}
-		c.Set("userId", userId)
+		c.Set("username", username)
 		c.Next()
 	}
 }
@@ -50,7 +50,7 @@ func tokenValid(token string) error {
 	return nil
 }
 
-func extractTokenID(tokenString string) (string, error) {
+func extractTokenUsername(tokenString string) (string, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -62,11 +62,11 @@ func extractTokenID(tokenString string) (string, error) {
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		userIdStr, ok := claims["user_id"].(string)
+		username, ok := claims["username"].(string)
 		if !ok {
-			return "", fmt.Errorf("user id claim is not a string")
+			return "", fmt.Errorf("username claim is not a string")
 		}
-		return userIdStr, nil
+		return username, nil
 	}
 	return "", nil
 }

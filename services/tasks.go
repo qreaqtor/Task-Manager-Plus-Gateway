@@ -9,37 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func getUser(ctx *gin.Context) {
-	username, ok := ctx.Params.Get("username")
-	if !ok {
-		username = ctx.MustGet("username").(string)
-	}
-
-	jsonData, err := io.ReadAll(ctx.Request.Body)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
-
-	outputDataChan := make(chan map[string]interface{})
-	statusCodeChan := make(chan int)
-
-	go func() {
-		outputData, statusCode := utils.SendRequest(utils.Get, utils.USERS_BACKEND+"/users/get/"+username, jsonData)
-		outputDataChan <- outputData
-		statusCodeChan <- statusCode
-	}()
-
-	select {
-	case outputData := <-outputDataChan:
-		statusCode := <-statusCodeChan
-		ctx.JSON(statusCode, outputData)
-	case <-time.After(5 * time.Second):
-		ctx.JSON(http.StatusGatewayTimeout, gin.H{"message": "request timeout"})
-	}
-}
-
-func updateUser(ctx *gin.Context) {
+func createTask(ctx *gin.Context) {
 	username := ctx.MustGet("username").(string)
 
 	jsonData, err := io.ReadAll(ctx.Request.Body)
@@ -52,7 +22,7 @@ func updateUser(ctx *gin.Context) {
 	statusCodeChan := make(chan int)
 
 	go func() {
-		outputData, statusCode := utils.SendRequest(utils.Patch, utils.USERS_BACKEND+"/users/update/"+username, jsonData)
+		outputData, statusCode := utils.SendRequest(utils.Post, utils.TASKS_BACKEND+"/users/"+username+"/tasks/create", jsonData)
 		outputDataChan <- outputData
 		statusCodeChan <- statusCode
 	}()
@@ -66,8 +36,9 @@ func updateUser(ctx *gin.Context) {
 	}
 }
 
-func deleteUser(ctx *gin.Context) {
+func getWorkspaceTasks(ctx *gin.Context) {
 	username := ctx.MustGet("username").(string)
+	workspaceId := ctx.Param("workspaceId")
 
 	jsonData, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
@@ -79,7 +50,7 @@ func deleteUser(ctx *gin.Context) {
 	statusCodeChan := make(chan int)
 
 	go func() {
-		outputData, statusCode := utils.SendRequest(utils.Delete, utils.USERS_BACKEND+"/users/delete/"+username, jsonData)
+		outputData, statusCode := utils.SendRequest(utils.Get, utils.TASKS_BACKEND+"/users/"+username+"/tasks/get/"+workspaceId, jsonData)
 		outputDataChan <- outputData
 		statusCodeChan <- statusCode
 	}()
@@ -93,9 +64,36 @@ func deleteUser(ctx *gin.Context) {
 	}
 }
 
-func RegisterUsersRoutes(rg *gin.RouterGroup) {
-	rg.GET("/get/:username", getUser)
-	rg.GET("/get/me", getUser)
-	rg.PATCH("/update", updateUser)
-	rg.DELETE("/delete", deleteUser)
+func deleteTask(ctx *gin.Context) {
+	username := ctx.MustGet("username").(string)
+	workspaceId := ctx.Param("workspaceId")
+
+	jsonData, err := io.ReadAll(ctx.Request.Body)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	outputDataChan := make(chan map[string]interface{})
+	statusCodeChan := make(chan int)
+
+	go func() {
+		outputData, statusCode := utils.SendRequest(utils.Delete, utils.TASKS_BACKEND+"/users/"+username+"/tasks/delete/"+workspaceId, jsonData)
+		outputDataChan <- outputData
+		statusCodeChan <- statusCode
+	}()
+
+	select {
+	case outputData := <-outputDataChan:
+		statusCode := <-statusCodeChan
+		ctx.JSON(statusCode, outputData)
+	case <-time.After(5 * time.Second):
+		ctx.JSON(http.StatusGatewayTimeout, gin.H{"message": "request timeout"})
+	}
+}
+
+func RegisterTasksRoutes(rg *gin.RouterGroup) {
+	rg.POST("/create", createTask)
+	rg.GET("/get/:workspaceId", getWorkspaceTasks)
+	rg.DELETE("/delete/:workspaceId", deleteTask)
 }

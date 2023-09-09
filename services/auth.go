@@ -16,7 +16,7 @@ func registerUser(ctx *gin.Context) {
 		return
 	}
 
-	outputDataChan := make(chan map[string]string)
+	outputDataChan := make(chan map[string]interface{})
 	statusCodeChan := make(chan int)
 
 	go func() {
@@ -41,7 +41,7 @@ func login(ctx *gin.Context) {
 		return
 	}
 
-	outputDataChan := make(chan map[string]string)
+	outputDataChan := make(chan map[string]interface{})
 	statusCodeChan := make(chan int)
 
 	go func() {

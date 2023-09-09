@@ -18,5 +18,13 @@ func main() {
 	usersPath.Use(utils.JwtAuthMiddleware())
 	services.RegisterUsersRoutes(usersPath)
 
+	tasksPath := server.Group("/tasks")
+	tasksPath.Use(utils.JwtAuthMiddleware())
+	services.RegisterTasksRoutes(tasksPath)
+
+	workspacePath := server.Group("/workspaces")
+	workspacePath.Use(utils.JwtAuthMiddleware())
+	services.RegisterWorkspaceRoutes(workspacePath)
+
 	log.Fatal(server.Run(":8080"))
 }
