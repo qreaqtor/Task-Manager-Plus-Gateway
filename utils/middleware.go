@@ -44,10 +44,7 @@ func tokenValid(token string) error {
 		}
 		return []byte(API_SECRET), nil
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func extractTokenUsername(tokenString string) (string, error) {
